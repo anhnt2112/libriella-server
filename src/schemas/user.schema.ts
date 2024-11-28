@@ -13,6 +13,12 @@ export class User {
 
   @Prop({ required: true })
   fullName: string;
+
+  @Prop({ type: [String], default: [] })
+  followers: string[];
+
+  @Prop({ type: [String], default: [] })
+  following: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

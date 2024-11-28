@@ -44,6 +44,41 @@ export class UserService {
     if (!user) throw new UnauthorizedException('Invalid user');
     return {
       username: user.username,
+      followers: user.followers,
+      following: user.following,
     };
+  }
+
+  async getUserByUsername(username: string) {
+    const user = await this.userModel.findOne({ username }).exec();
+    if (!user) throw new UnauthorizedException('Invalid user');
+    return {
+      username: user.username,
+      followers: user.followers,
+      following: user.following,
+      fullName: user.fullName,
+    };
+  }
+
+  async followUser(username: string, userId: string) {
+    const otherUser = await this.findByUsername(username);
+    const currentUser = await this.userModel.findById(userId).exec();
+
+    if (!currentUser) {
+      throw new UnauthorizedException('Current user not found');
+    }
+    if (!otherUser) {
+      throw new ConflictException('User to follow not found');
+    }
+
+    if (!otherUser.followers.includes(currentUser.username)) {
+      otherUser.followers.push(currentUser.username);
+    }
+    if (!currentUser.following.includes(otherUser.username)) {
+      currentUser.following.push(otherUser.username);
+    }
+
+    await otherUser.save();
+    await currentUser.save();
   }
 }

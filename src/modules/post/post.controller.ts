@@ -64,7 +64,7 @@ export class PostController {
     }
   }
 
-  @Get('get-posts-by-username/:username?')
+  @Get('get-posts-by-username/:username')
   @UseGuards(AuthGuard)
   async getPosts(
     @Res() res,
@@ -77,10 +77,8 @@ export class PostController {
       const page = parseInt(query.page) || 1;
       const limit = parseInt(query.limit) || 10;
       const skip = (page - 1) * limit;
-      const posts = username
-        ? await this.postService.getPosts(username, req.user.id, isFavorite)
-        : await this.postService.getUserPosts(
-            req.user.id,
+      const posts = await this.postService.getUserPosts(
+            username,
             isFavorite,
             skip,
             limit,
