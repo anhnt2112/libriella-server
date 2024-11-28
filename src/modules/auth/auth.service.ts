@@ -11,13 +11,20 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  async register(username: string, password: string): Promise<void> {
-    await this.userService.createUser(username, password);
+  async register(
+    username: string,
+    password: string,
+    fullName: string,
+  ): Promise<void> {
+    await this.userService.createUser(username, password, fullName);
   }
 
   async login(username: string, password: string): Promise<string> {
     const user = await this.userService.findByUsername(username);
-    if (!user || !(await this.userService.validatePassword(password, user.password))) {
+    if (
+      !user ||
+      !(await this.userService.validatePassword(password, user.password))
+    ) {
       throw new UnauthorizedException('Invalid username or password');
     }
 

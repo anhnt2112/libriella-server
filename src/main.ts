@@ -7,13 +7,13 @@ async function bootstrap() {
   app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle("Libriella APIs")
-    .setDescription("APIs Document for Libriella Project")
+    .setTitle('Libriella APIs')
+    .setDescription('APIs Document for Libriella Project')
     .setVersion('1.0')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api-docs", app, document);
+  SwaggerModule.setup('api-docs', app, document);
 
   await app.listen(process.env.PORT ?? 3000);
 }
