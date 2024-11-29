@@ -10,6 +10,7 @@ import { AuthGuard } from './modules/auth/auth.guard';
 import { PostModule } from './modules/post/post.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ChatModule } from './modules/conversation/conversation.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { join } from 'path';
     UserModule,
     AuthModule,
     PostModule,
+    ChatModule
   ],
   controllers: [AppController],
   providers: [AppService],
