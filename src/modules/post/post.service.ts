@@ -6,14 +6,17 @@ import { UserService } from '../user/user.service';
 
 @Injectable()
 export class PostService {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>, private readonly userService: UserService) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private readonly userService: UserService,
+  ) {}
 
   async createPost(post: any) {
     const user = await this.userService.getUserById(post.userId);
     if (!user) throw new UnauthorizedException('Invalid user');
     const newPost = new this.postModel({
       ...post,
-      username: user.username
+      username: user.username,
     });
     return newPost.save();
   }
@@ -32,5 +35,35 @@ export class PostService {
       .limit(limit)
       .exec();
     return posts;
+  }
+
+  async getExplorePosts(userId: string, skip: number, limit: number) {
+    /// need more: user not see: owner posts, folowing posts, reacted and commented posts
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    const posts = await this.postModel
+      .find({ username: { $ne: user.username } })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+    return posts;
+  }
+
+  async reactPost(postId: string, userId: string) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    const post = await this.postModel.findById(postId).exec();
+    if (!post) throw new UnauthorizedException('Invalid post');
+    post.reacts.push(user.username);
+    return post.save();
+  }
+
+  async commentPost(postId: string, userId: string, content: string) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    const post = await this.postModel.findById(postId).exec();
+    if (!post) throw new UnauthorizedException('Invalid post');
+    post.comments.push({ username: user.username, content });
+    return post.save();
   }
 }

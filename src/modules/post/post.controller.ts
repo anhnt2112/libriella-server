@@ -78,12 +78,58 @@ export class PostController {
       const limit = parseInt(query.limit) || 10;
       const skip = (page - 1) * limit;
       const posts = await this.postService.getUserPosts(
-            username,
-            isFavorite,
-            skip,
-            limit,
-          );
+        username,
+        isFavorite,
+        skip,
+        limit,
+      );
       return res.status(HttpStatus.OK).send({ posts });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get('explore')
+  @UseGuards(AuthGuard)
+  async getExplorePosts(@Res() res, @Req() req, @Query() query: any) {
+    try {
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 10;
+      const skip = (page - 1) * limit;
+      const posts = await this.postService.getExplorePosts(
+        req.user.id,
+        skip,
+        limit,
+      );
+      return res.status(HttpStatus.OK).send({ posts });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Post('react')
+  @UseGuards(AuthGuard)
+  async reactPost(@Body() body, @Res() res, @Req() req) {
+    try {
+      await this.postService.reactPost(body.postId, req.user.id);
+      return res.status(HttpStatus.OK).send({ message: 'React successfully' });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Post('comment')
+  @UseGuards(AuthGuard)
+  async commentPost(@Body() body, @Res() res, @Req() req) {
+    try {
+      await this.postService.commentPost(
+        body.postId,
+        req.user.id,
+        body.comment,
+      );
+      return res
+        .status(HttpStatus.OK)
+        .send({ message: 'Comment successfully' });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
