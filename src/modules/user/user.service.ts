@@ -81,4 +81,33 @@ export class UserService {
     await otherUser.save();
     await currentUser.save();
   }
+
+  async unFollowUser(username: string, userId: string) {
+    const otherUser = await this.findByUsername(username);
+    const currentUser = await this.userModel.findById(userId).exec();
+
+    if (!currentUser) {
+      throw new UnauthorizedException('Current user not found');
+    }
+    if (!otherUser) {
+      throw new ConflictException('User to follow not found');
+    }
+
+    if (!otherUser.followers.includes(currentUser.username)) {
+      throw new ConflictException('Not found relation');
+    } else {
+      const index = otherUser.followers.indexOf(currentUser.username);
+      otherUser.followers.splice(index, 1);
+    }
+
+    if (!currentUser.following.includes(otherUser.username)) {
+      throw new ConflictException('Not found relation');
+    } else {
+      const index = currentUser.following.indexOf(otherUser.username);
+      currentUser.following.splice(index, 1);
+    }
+
+    await otherUser.save();
+    await currentUser.save();
+  }
 }

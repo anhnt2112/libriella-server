@@ -7,7 +7,7 @@ import {
   UseGuards,
   Req,
   Param,
-  Post
+  Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -30,21 +30,46 @@ export class UserController {
   }
 
   @Get('profile-by-username/:username')
-  async getProfileByUsername(@Res() res, @Req() req, @Param('username') username: string) {
+  async getProfileByUsername(
+    @Res() res,
+    @Req() req,
+    @Param('username') username: string,
+  ) {
     try {
       const data = await this.userService.getUserByUsername(username);
-      return res.status(HttpStatus.OK).send(data)
+      return res.status(HttpStatus.OK).send(data);
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
-  } 
+  }
 
   @Post('follow/:username')
   @UseGuards(AuthGuard)
-  async followUser(@Param('username') username: string, @Req() req, @Res() res) {
+  async followUser(
+    @Param('username') username: string,
+    @Req() req,
+    @Res() res,
+  ) {
     try {
       await this.userService.followUser(username, req.user.id);
-      return res.status(HttpStatus.OK).send({ message: "Follow successfully" });
+      return res.status(HttpStatus.OK).send({ message: 'Follow successfully' });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Post('unfollow/:username')
+  @UseGuards(AuthGuard)
+  async unFollowUser(
+    @Param('username') username: string,
+    @Req() req,
+    @Res() res,
+  ) {
+    try {
+      await this.userService.unFollowUser(username, req.user.id);
+      return res
+        .status(HttpStatus.OK)
+        .send({ message: 'Unfollow successfully' });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
