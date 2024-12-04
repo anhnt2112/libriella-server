@@ -37,6 +37,16 @@ export class PostService {
     return posts;
   }
 
+  async getPreviePosts(username: string) {
+    const user = await this.userService.findByUsername(username);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    const posts = await this.postModel.find({username, isFavorite: false}).skip(0).limit(3).exec();
+    return posts.map(post => ({
+      id: post._id,
+      image: post.image
+    }));
+  }
+
   async getExplorePosts(userId: string, skip: number, limit: number) {
     /// need more: user not see: owner posts, folowing posts, reacted and commented posts
     const user = await this.userService.getUserById(userId);

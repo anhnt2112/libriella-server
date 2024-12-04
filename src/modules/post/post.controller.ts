@@ -134,4 +134,21 @@ export class PostController {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
   }
+
+  @Get("preview/:username")
+  @UseGuards(AuthGuard)
+  async getPreviewByUsername(
+    @Res() res,
+    @Param('username') username: string,
+    @Req() req
+  ) {
+    try {
+      const posts = await this.postService.getPreviePosts(username);
+      return res
+        .status(HttpStatus.OK)
+        .send(posts);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
 }
