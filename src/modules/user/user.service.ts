@@ -57,7 +57,50 @@ export class UserService {
       followers: user.followers,
       following: user.following,
       fullName: user.fullName,
+      avatar: user.avatar,
     };
+  }
+
+  async getConnections(username: string) {
+    const user = await this.findByUsername(username);
+    if (!user) throw new UnauthorizedException('Invalid user');
+
+    const [followers, following] = await Promise.all([
+      this.getFollowers(user.followers),
+      this.getFollowing(user.following),
+    ]);
+
+    return { followers, following };
+  }
+
+  private async getFollowers(followers: string[]) {
+    return Promise.all(
+      followers.map(async (username) => {
+        const user = await this.getUserByUsername(username);
+        return {
+          username: user.username,
+          fullName: user.fullName,
+          followers: user.followers.length,
+          following: user.following.length,
+          avatar: user.avatar,
+        };
+      }),
+    );
+  }
+
+  private async getFollowing(following: string[]) {
+    return Promise.all(
+      following.map(async (username) => {
+        const user = await this.getUserByUsername(username);
+        return {
+          username: user.username,
+          fullName: user.fullName,
+          followers: user.followers.length,
+          following: user.following.length,
+          avatar: user.avatar,
+        };
+      }),
+    );
   }
 
   async followUser(username: string, userId: string) {
@@ -109,5 +152,19 @@ export class UserService {
 
     await otherUser.save();
     await currentUser.save();
+  }
+
+  async updateAvatar(userId: string, avatar: string) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new UnauthorizedException('Invalid user');
+    user.avatar = avatar;
+    return user.save();
+  }
+
+  async removeAvatar(userId: string) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new UnauthorizedException('Invalid user');
+    user.avatar = null;
+    return user.save();
   }
 }

@@ -40,11 +40,19 @@ export class PostService {
   async getPreviePosts(username: string) {
     const user = await this.userService.findByUsername(username);
     if (!user) throw new UnauthorizedException('Invalid user');
-    const posts = await this.postModel.find({username, isFavorite: false}).skip(0).limit(3).exec();
-    return posts.map(post => ({
-      id: post._id,
-      image: post.image
-    }));
+    const posts = await this.postModel
+      .find({ username, isFavorite: false })
+      .skip(0)
+      .limit(3)
+      .exec();
+    const postCount = await this.postModel.find({ username }).countDocuments();
+    return {
+      count: postCount,
+      previrewImage: posts.map((post) => ({
+        id: post._id,
+        image: post.image,
+      })),
+    };
   }
 
   async getExplorePosts(userId: string, skip: number, limit: number) {

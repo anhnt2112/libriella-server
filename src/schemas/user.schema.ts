@@ -14,6 +14,9 @@ export class User {
   @Prop({ required: true })
   fullName: string;
 
+  @Prop()
+  avatar: string;
+
   @Prop({ type: [String], default: [] })
   followers: string[];
 
