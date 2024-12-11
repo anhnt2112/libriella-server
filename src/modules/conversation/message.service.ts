@@ -19,7 +19,9 @@ export class MessageService {
     const message = await this.messageModel.create({
       conversation: conversationId,
       sender: sender.username,
+      senderAvatar: sender.avatar,
       content,
+      readedBy: [sender.username],
     });
 
     return message;
@@ -29,6 +31,6 @@ export class MessageService {
     return this.messageModel
       .find({ conversation: conversationId })
       .populate('sender')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: 1 });
   }
 }

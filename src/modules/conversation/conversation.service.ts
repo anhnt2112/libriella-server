@@ -24,9 +24,19 @@ export class ConversationService {
     if (!conversation) {
       conversation = await this.conversationModel.create({
         participants: [user1.username, user2.username],
+        name: user1.fullName,
+        avatar: user1.avatar,
       });
     }
 
     return conversation;
+  }
+
+  async getConversations(userId: string) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    return this.conversationModel.find({
+      participants: { $in: [user.username] }
+    }).exec();
   }
 }

@@ -46,6 +46,7 @@ export class UserService {
       username: user.username,
       followers: user.followers,
       following: user.following,
+      avatar: user.avatar,
     };
   }
 

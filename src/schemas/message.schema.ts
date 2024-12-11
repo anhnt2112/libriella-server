@@ -10,11 +10,14 @@ export class Message extends Document {
   @Prop({ type: 'string', required: true })
   sender: string;
 
+  @Prop({ type: 'string' })
+  senderAvatar: string;
+
   @Prop({ required: true })
   content: string;
 
-  @Prop({ default: false })
-  read: boolean;
+  @Prop({ type: [String], default: [] })
+  readedBy: string[];
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

@@ -48,7 +48,7 @@ export class PostService {
     const postCount = await this.postModel.find({ username }).countDocuments();
     return {
       count: postCount,
-      previrewImage: posts.map((post) => ({
+      previewImage: posts.map((post) => ({
         id: post._id,
         image: post.image,
       })),

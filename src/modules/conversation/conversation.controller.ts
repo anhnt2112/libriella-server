@@ -11,4 +11,10 @@ export class ConversationController {
   async createConversation(@Body('receiver') receiver: string, @Req() req) {
     return this.conversationService.findOrCreateConversation(receiver, req.user.id);
   }
+
+  @Get()
+  @UseGuards(AuthGuard)
+  async getConversations(@Req() req) {
+    return this.conversationService.getConversations(req.user.id);
+  }
 }

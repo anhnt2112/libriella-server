@@ -136,7 +136,6 @@ export class PostController {
   }
 
   @Get("preview/:username")
-  @UseGuards(AuthGuard)
   async getPreviewByUsername(
     @Res() res,
     @Param('username') username: string,
