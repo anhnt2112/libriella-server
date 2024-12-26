@@ -11,6 +11,7 @@ import { PostModule } from './modules/post/post.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ChatModule } from './modules/conversation/conversation.module';
+import { NotificationModule } from './modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -22,10 +23,11 @@ import { ChatModule } from './modules/conversation/conversation.module';
       isGlobal: true,
       load: [databaseConfig],
     }),
+    NotificationModule,
     UserModule,
     AuthModule,
     PostModule,
-    ChatModule
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

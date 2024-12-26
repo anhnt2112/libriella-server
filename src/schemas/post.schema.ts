@@ -1,18 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { User } from './user.schema';
 
 export type PostDocument = Post & Document;
-
-@Schema({ timestamps: true })
-export class Comment {
-  @Prop({ required: true })
-  username: string;
-
-  @Prop({ required: true })
-  content: string;
-}
-
-const CommentSchema = SchemaFactory.createForClass(Comment);
 
 @Schema({ timestamps: true })
 export class Post {
@@ -31,14 +21,14 @@ export class Post {
   @Prop({ required: true })
   isFavorite: boolean;
 
-  @Prop({ type: [String], default: [] })
-  reacts: string[];
+  @Prop({ type: Number, default: 0 })
+  likes: number;
 
-  @Prop({ type: [CommentSchema], default: [] })
-  comments: Comment[];
+  @Prop({ type: Number, default: 0 })
+  comments: number;
 
-  @Prop({ required: true })
-  username: string;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  author: Types.ObjectId;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

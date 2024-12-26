@@ -7,10 +7,15 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from 'src/schemas/user.schema';
+import path from 'path';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private notificationService: NotificationService
+  ) {}
 
   async createUser(
     username: string,
@@ -40,119 +45,71 @@ export class UserService {
   }
 
   async getUserById(id: string) {
-    const user = await this.userModel.findById(id);
+    const user = await this.userModel.findById(id).select('-password').exec();
     if (!user) throw new UnauthorizedException('Invalid user');
-    return {
-      username: user.username,
-      followers: user.followers,
-      following: user.following,
-      avatar: user.avatar,
-    };
+    return user;
   }
 
   async getUserByUsername(username: string) {
-    const user = await this.userModel.findOne({ username }).exec();
+    const user = await this.userModel.findOne({ username }).select('-password').exec();
     if (!user) throw new UnauthorizedException('Invalid user');
+    return user;
+  }
+
+  async getConnections(userId: string) {
+    const user = await this.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+
+    const userFullConnections = await this.userModel.findById(userId).select("followers following").exec();
+
+    const followersDetails = await Promise.all(
+      userFullConnections.followers.map((followerId) => 
+        this.userModel.findById(followerId).select('-password')
+      )
+    );
+
+    const followingDetails = await Promise.all(
+      userFullConnections.following.map((followingId) => 
+        this.userModel.findById(followingId).select('-password')
+      )
+    );
+
     return {
-      username: user.username,
-      followers: user.followers,
-      following: user.following,
-      fullName: user.fullName,
-      avatar: user.avatar,
+      followers: followersDetails,
+      following: followingDetails
     };
   }
 
-  async getConnections(username: string) {
-    const user = await this.findByUsername(username);
-    if (!user) throw new UnauthorizedException('Invalid user');
+  async followUser(followingId: string, followerId: string) {
+    await this.userModel.findByIdAndUpdate(followingId, {
+      $addToSet: { followers: followerId },
+    });
 
-    const [followers, following] = await Promise.all([
-      this.getFollowers(user.followers),
-      this.getFollowing(user.following),
-    ]);
+    await this.userModel.findByIdAndUpdate(followerId, {
+      $addToSet: { following: followingId },
+    });
 
-    return { followers, following };
+    await this.notificationService.createNotification({
+      userId: followingId,
+      isPost: false,
+      isComment: false,
+      postId: null,
+      creatorId: followerId
+    });
+
+    return { success: true };
   }
 
-  private async getFollowers(followers: string[]) {
-    return Promise.all(
-      followers.map(async (username) => {
-        const user = await this.getUserByUsername(username);
-        return {
-          username: user.username,
-          fullName: user.fullName,
-          followers: user.followers.length,
-          following: user.following.length,
-          avatar: user.avatar,
-        };
-      }),
-    );
-  }
-
-  private async getFollowing(following: string[]) {
-    return Promise.all(
-      following.map(async (username) => {
-        const user = await this.getUserByUsername(username);
-        return {
-          username: user.username,
-          fullName: user.fullName,
-          followers: user.followers.length,
-          following: user.following.length,
-          avatar: user.avatar,
-        };
-      }),
-    );
-  }
-
-  async followUser(username: string, userId: string) {
-    const otherUser = await this.findByUsername(username);
-    const currentUser = await this.userModel.findById(userId).exec();
-
-    if (!currentUser) {
-      throw new UnauthorizedException('Current user not found');
-    }
-    if (!otherUser) {
-      throw new ConflictException('User to follow not found');
-    }
-
-    if (!otherUser.followers.includes(currentUser.username)) {
-      otherUser.followers.push(currentUser.username);
-    }
-    if (!currentUser.following.includes(otherUser.username)) {
-      currentUser.following.push(otherUser.username);
-    }
-
-    await otherUser.save();
-    await currentUser.save();
-  }
-
-  async unFollowUser(username: string, userId: string) {
-    const otherUser = await this.findByUsername(username);
-    const currentUser = await this.userModel.findById(userId).exec();
-
-    if (!currentUser) {
-      throw new UnauthorizedException('Current user not found');
-    }
-    if (!otherUser) {
-      throw new ConflictException('User to follow not found');
-    }
-
-    if (!otherUser.followers.includes(currentUser.username)) {
-      throw new ConflictException('Not found relation');
-    } else {
-      const index = otherUser.followers.indexOf(currentUser.username);
-      otherUser.followers.splice(index, 1);
-    }
-
-    if (!currentUser.following.includes(otherUser.username)) {
-      throw new ConflictException('Not found relation');
-    } else {
-      const index = currentUser.following.indexOf(otherUser.username);
-      currentUser.following.splice(index, 1);
-    }
-
-    await otherUser.save();
-    await currentUser.save();
+  async unfollowUser(followerId: string, followingId: string) {
+    await this.userModel.findByIdAndUpdate(followingId, {
+      $pull: { followers: followerId }, 
+    });
+  
+    await this.userModel.findByIdAndUpdate(followerId, {
+      $pull: { following: followingId }, 
+    });
+  
+    return { success: true };
   }
 
   async updateAvatar(userId: string, avatar: string) {
@@ -167,5 +124,12 @@ export class UserService {
     if (!user) throw new UnauthorizedException('Invalid user');
     user.avatar = null;
     return user.save();
+  }
+
+  async searchByUsername(searchText: string) {
+    return this.userModel
+      .find({ username: { $regex: searchText, $options: 'i' } })
+      .select('username fullName avatar followers')
+      .exec();
   }
 }

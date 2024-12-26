@@ -1,15 +1,18 @@
 // message.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message } from 'src/schemas/message.schema';
 import { UserService } from '../user/user.service';
+import { Conversation } from 'src/schemas/conversation.schema';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectModel(Message.name)
     private readonly messageModel: Model<Message>,
+    @InjectModel(Conversation.name)
+    private readonly conversationModel: Model<Conversation>,
     private readonly userService: UserService,
   ) {}
 
@@ -23,6 +26,17 @@ export class MessageService {
       content,
       readedBy: [sender.username],
     });
+
+    await this.conversationModel.findByIdAndUpdate(
+      conversationId,
+      {
+        lastMessage: content,
+        lastSender: sender.username
+      },
+      {
+        new: true
+      }
+    );
 
     return message;
   }

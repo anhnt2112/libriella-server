@@ -11,6 +11,7 @@ import {
   BadRequestException,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { AuthGuard } from '../auth/auth.guard';
@@ -35,10 +36,10 @@ export class UserController {
     }
   }
 
-  @Get('connections/:username')
-  async getConnections(@Res() res, @Param('username') username: string) {
+  @Get('connections/:userID')
+  async getConnections(@Res() res, @Param('userID') userID: string) {
     try {
-      const data = await this.userService.getConnections(username);
+      const data = await this.userService.getConnections(userID);
       return res.status(HttpStatus.OK).send(data);
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
@@ -59,30 +60,57 @@ export class UserController {
     }
   }
 
-  @Post('follow/:username')
+  @Get('profile-by-user-id/:userId')
+  async getProfileByUserID(
+    @Res() res,
+    @Req() req,
+    @Param('userId') userId: string,
+  ) {
+    try {
+      const data = await this.userService.getUserById(userId);
+      return res.status(HttpStatus.OK).send(data);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get('search')
+  async search(
+    @Query('username') username: string,
+    @Res() res,
+  ) {
+    try {
+      const data = await this.userService.searchByUsername(username);
+      return res.status(HttpStatus.OK).send(data);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Post('follow/:userID')
   @UseGuards(AuthGuard)
   async followUser(
-    @Param('username') username: string,
+    @Param('userID') userID: string,
     @Req() req,
     @Res() res,
   ) {
     try {
-      await this.userService.followUser(username, req.user.id);
+      await this.userService.followUser(userID, req.user.id);
       return res.status(HttpStatus.OK).send({ message: 'Follow successfully' });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
   }
 
-  @Post('unfollow/:username')
+  @Post('unfollow/:userID')
   @UseGuards(AuthGuard)
   async unFollowUser(
-    @Param('username') username: string,
+    @Param('userID') userID: string,
     @Req() req,
     @Res() res,
   ) {
     try {
-      await this.userService.unFollowUser(username, req.user.id);
+      await this.userService.unfollowUser(userID, req.user.id);
       return res
         .status(HttpStatus.OK)
         .send({ message: 'Unfollow successfully' });

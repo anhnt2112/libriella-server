@@ -64,11 +64,11 @@ export class PostController {
     }
   }
 
-  @Get('get-posts-by-username/:username')
+  @Get('get-posts-by-user-id/:userId')
   @UseGuards(AuthGuard)
   async getPosts(
     @Res() res,
-    @Param('username') username: string,
+    @Param('userId') userId: string,
     @Query() query: any,
     @Req() req,
   ) {
@@ -78,11 +78,29 @@ export class PostController {
       const limit = parseInt(query.limit) || 10;
       const skip = (page - 1) * limit;
       const posts = await this.postService.getUserPosts(
-        username,
+        userId,
         isFavorite,
         skip,
         limit,
       );
+      return res.status(HttpStatus.OK).send({ posts });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get('following')
+  @UseGuards(AuthGuard)
+  async getFollowingPosts(@Res() res, @Req() req, @Query() query: any) {
+    try {
+      const page = parseInt(query.page) || 1;
+      const limit = parseInt(query.limit) || 100;
+      const skip = (page - 1) * limit;
+      const posts = await this.postService.getFollowingPosts(
+        req.user.id,
+        skip,
+        limit
+      )
       return res.status(HttpStatus.OK).send({ posts });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
@@ -94,7 +112,7 @@ export class PostController {
   async getExplorePosts(@Res() res, @Req() req, @Query() query: any) {
     try {
       const page = parseInt(query.page) || 1;
-      const limit = parseInt(query.limit) || 10;
+      const limit = parseInt(query.limit) || 100;
       const skip = (page - 1) * limit;
       const posts = await this.postService.getExplorePosts(
         req.user.id,
@@ -107,45 +125,50 @@ export class PostController {
     }
   }
 
-  @Post('react')
+  @Get('following')
   @UseGuards(AuthGuard)
-  async reactPost(@Body() body, @Res() res, @Req() req) {
-    try {
-      await this.postService.reactPost(body.postId, req.user.id);
-      return res.status(HttpStatus.OK).send({ message: 'React successfully' });
-    } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
-    }
-  }
+  async getFollowingPost(
+    @Res() res,
+    @Req() req,
+  ) {}
 
-  @Post('comment')
-  @UseGuards(AuthGuard)
-  async commentPost(@Body() body, @Res() res, @Req() req) {
-    try {
-      await this.postService.commentPost(
-        body.postId,
-        req.user.id,
-        body.comment,
-      );
-      return res
-        .status(HttpStatus.OK)
-        .send({ message: 'Comment successfully' });
-    } catch (error) {
-      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
-    }
-  }
-
-  @Get("preview/:username")
+  @Get("preview/:userID")
   async getPreviewByUsername(
     @Res() res,
-    @Param('username') username: string,
+    @Param('userID') userID: string,
     @Req() req
   ) {
     try {
-      const posts = await this.postService.getPreviePosts(username);
+      const posts = await this.postService.getPreviewPosts(userID);
       return res
         .status(HttpStatus.OK)
         .send(posts);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get("get-post-by-id/:postId")
+  async getPostByPostId(
+    @Res() res,
+    @Param('postId') postId: string
+  ) {
+    try {
+      const post = await this.postService.getPostByPostId(postId);
+      return res.status(HttpStatus.OK).send(post);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get('search')
+  async search(
+    @Query('bookName') bookName: string,
+    @Res() res,
+  ) {
+    try {
+      const data = await this.postService.searchByBookName(bookName);
+      return res.status(HttpStatus.OK).send(data);
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
