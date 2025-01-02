@@ -36,6 +36,19 @@ export class UserController {
     }
   }
 
+  @Get('explore')
+  @UseGuards(AuthGuard)
+  async explore(@Body() body, @Res() res, @Req() req) {
+    try {
+      const users = await this.userService.getUnfollowedUsers(
+        req.user.id as unknown as string,
+      );
+      return res.status(HttpStatus.OK).send({ explore: users });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
   @Get('connections/:userID')
   async getConnections(@Res() res, @Param('userID') userID: string) {
     try {

@@ -132,4 +132,21 @@ export class UserService {
       .select('username fullName avatar followers')
       .exec();
   }
+
+  async getUnfollowedUsers(userId: string): Promise<User[]> {
+    const user = await this.userModel.findById(userId).lean();
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Get list of users not followed by the current user
+    const unfollowedUsers = await this.userModel
+      .find({
+        _id: { $ne: userId, $nin: user.following }, // Exclude the user and their following list
+      })
+      .limit(5)
+      .lean();
+
+    return unfollowedUsers;
+  }
 }
