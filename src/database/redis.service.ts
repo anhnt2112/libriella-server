@@ -35,6 +35,22 @@ export class RedisService implements OnModuleInit {
     return { sessionId };
   }
 
+  async createNote(userId: string, content: string) {
+    const noteId = `note_${userId}`;
+    const exists = await this.client.exists(noteId);
+    if (exists) await this.deleteSession(noteId);
+    const noteData = JSON.stringify({ userId, content, timestamp: Date.now() });
+    return this.client.set(noteId, noteData, 'EX', 24 * 60 * 60);
+  }
+
+  async getNotes(userIds: string[]) {
+    const keys = userIds.map((userId) => `note_${userId}`);
+    if (!keys.length) return [];
+    const notes = await this.client.mget(...keys);
+
+    return notes.map((note, index) => (note ? { userId: userIds[index], ...JSON.parse(note) } : null)).filter((note) => note !== null);
+  }
+
   async getSession(sessionId: string) {
     const userId = await this.client.get(sessionId);
     return userId;

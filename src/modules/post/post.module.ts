@@ -8,9 +8,11 @@ import { Comment, CommentSchema } from 'src/schemas/comment.schema';
 import { CommentService } from './comment.service';
 import { CommentController } from './comment.controller';
 import { NotificationModule } from '../notification/notification.module';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
   imports: [
+    DatabaseModule,
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }, { name: Comment.name, schema: CommentSchema }]),
     NotificationModule,
     UserModule,

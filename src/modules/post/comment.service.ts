@@ -30,9 +30,8 @@ export class CommentService {
         await this.postService.updatePostReact(postId, content, false);
         await this.notificationService.createNotification({
             userId: post.author._id.toString(),
-            isPost: true,
-            isComment: false,
             postId,
+            commentId: null,
             creatorId: userId
         });
         return newElement.save();
@@ -98,4 +97,27 @@ export class CommentService {
             select: 'username fullName avatar'
         }).sort({ createdAt: -1 }).exec();
     }
+
+    async reactComment(postId: string, commentId: string, userId: string, content) {
+        const user = await this.userService.getUserById(userId);
+        const post = await this.postService.getPostByPostId(postId);
+
+        if (!user) throw new UnauthorizedException('Invalid user');
+        if (!post) throw new ConflictException('Invalid post');
+
+        const newElement = new this.commentModel({
+            author: userId,
+            postId: postId,
+            commentId: commentId,
+            content
+        });
+        await this.postService.updatePostReact(postId, content, false);
+        await this.notificationService.createNotification({
+            userId: post.author._id.toString(),
+            postId,
+            commentId,
+            creatorId: userId
+        });
+        return newElement.save();
+    } 
 }

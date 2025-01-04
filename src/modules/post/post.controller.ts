@@ -173,4 +173,47 @@ export class PostController {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
   }
+
+  @Post('note')
+  @UseGuards(AuthGuard)
+  async createNote(
+    @Req() req,
+    @Res() res,
+    @Body() body
+  ) {
+    try {
+      await this.postService.createNote(req.user.id, body.content);
+      return res.status(HttpStatus.OK).send({ message: "OK" });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get('note/:userId')
+  async getNote(
+    @Req() req,
+    @Res() res,
+    @Param('userId') userId: string
+  ) {
+    try {
+      const note = await this.postService.getNote(userId);
+      return res.status(HttpStatus.OK).send(note);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Get('notes')
+  @UseGuards(AuthGuard)
+  async getNotes(
+    @Req() req,
+    @Res() res,
+  ) {
+    try {
+      const notes = await this.postService.getFollowingNote(req.user.id);
+      return res.status(HttpStatus.OK).send(notes);
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
 }

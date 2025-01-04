@@ -2,17 +2,6 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types, Document } from "mongoose";
 import { User } from "./user.schema";
 
-class CommentComment {
-    @Prop({ type: Types.ObjectId, ref: 'Comment', required: true })
-    commentId: Types.ObjectId;
-
-    @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-    author: Types.ObjectId;
-
-    @Prop({ type: String })
-    content: string;
-}
-
 @Schema({ timestamps: true })
 export class Comment extends Document {
     @Prop({ type: Types.ObjectId, ref: 'Post', required: true })
@@ -21,8 +10,8 @@ export class Comment extends Document {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     author: User;
 
-    @Prop({ type: [CommentComment], default: [] })
-    comments: CommentComment[];
+    @Prop({ type: Types.ObjectId, default: null })
+    comments: Comment;
 
     @Prop({ type: String })
     content: string;

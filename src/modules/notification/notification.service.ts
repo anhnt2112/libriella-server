@@ -9,9 +9,8 @@ export class NotificationService {
 
     async createNotification(noti: {
         userId: string,
-        isPost: boolean,
-        isComment: boolean,
         postId: string,
+        commentId: string,
         creatorId: string
     }) {
         const notification = new this.notificationModel(noti);

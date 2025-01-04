@@ -91,9 +91,8 @@ export class UserService {
 
     await this.notificationService.createNotification({
       userId: followingId,
-      isPost: false,
-      isComment: false,
       postId: null,
+      commentId: null,
       creatorId: followerId
     });
 

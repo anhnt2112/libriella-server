@@ -21,6 +21,21 @@ export class CommentController {
         }
     }
 
+    @Post('like-comment')
+    @UseGuards(AuthGuard)
+    async likeComment(
+        @Body() body,
+        @Res() res,
+        @Req() req,
+    ) {
+        try {
+            await this.commentService.reactComment(body.postId, body.commentId, req.user.id, null);
+            return res.status(HttpStatus.OK).send({ message: "OK" });
+        } catch (error) {
+            return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+        }
+    }
+
     @Post('comment')
     @UseGuards(AuthGuard)
     async commentPost(
@@ -30,6 +45,21 @@ export class CommentController {
     ) {
         try {
             await this.commentService.reactPost(body.postId, req.user.id, body.content);
+            return res.status(HttpStatus.OK).send({ message: "OK" });
+        } catch (error) {
+            return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+        }
+    }
+
+    @Post('reply-comment')
+    @UseGuards(AuthGuard)
+    async replyComment(
+        @Body() body,
+        @Res() res,
+        @Req() req,
+    ) {
+        try {
+            await this.commentService.reactComment(body.postId, body.commentId, req.user.id, body.content);
             return res.status(HttpStatus.OK).send({ message: "OK" });
         } catch (error) {
             return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });

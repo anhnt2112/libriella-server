@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Post, PostDocument } from 'src/schemas/post.schema';
 import { UserService } from '../user/user.service';
 import { Comment } from 'src/schemas/comment.schema';
+import { RedisService } from 'src/database/redis.service';
 
 @Injectable()
 export class PostService {
@@ -11,7 +12,38 @@ export class PostService {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @InjectModel(Comment.name) private commentModel: Model<Comment>,
     private readonly userService: UserService,
+    private readonly redisService: RedisService,
   ) {}
+
+  async createNote(userId, content) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user'); 
+    return this.redisService.createNote(userId, content);
+  }
+
+  async getNote(userId) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    return this.redisService.getNotes([userId]);
+  }
+
+  async getFollowingNote(userId) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+    const notes = await this.redisService.getNotes(user.following.map(id => id.toString()));
+    const notesWithUserInfo = await Promise.all(notes.map(
+      async (note) => {
+        const item = await this.userService.getUserById(note.userId);
+        return {
+          user: item,
+          content: note.content,
+          timestamp: note.timestamp
+        }
+      }
+    ));
+
+    return notesWithUserInfo;
+  }
 
   async createPost(post: any) {
     const user = await this.userService.getUserById(post.userId);
