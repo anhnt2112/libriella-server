@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -7,7 +8,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from 'src/schemas/user.schema';
-import path from 'path';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -17,18 +17,23 @@ export class UserService {
     private notificationService: NotificationService
   ) {}
 
+  async findByFacebookId(facebookId) {
+    return this.userModel.findOne({ facebookId }).exec();
+  }
+
+  async findByGoogleId(googleId) {
+    return this.userModel.findOne({ googleId }).exec();
+  }
+
   async createUser(
-    username: string,
-    password: string,
-    fullName: string,
+    body
   ): Promise<UserDocument> {
-    const findedUser = await this.findByUsername(username);
+    const findedUser = await this.findByUsername(body.username);
     if (findedUser) throw new ConflictException('User already exists');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = body.password ? await bcrypt.hash(body.password, 10) : null;
     const user = new this.userModel({
-      username,
+      ...body,
       password: hashedPassword,
-      fullName,
     });
     return user.save();
   }
@@ -48,6 +53,29 @@ export class UserService {
     const user = await this.userModel.findById(id).select('-password').exec();
     if (!user) throw new UnauthorizedException('Invalid user');
     return user;
+  }
+
+  async updateUser(body, userId) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new UnauthorizedException('Invalid user');
+    try {
+      const allowedUpdates = ['username', 'email', 'fullName', 'password', 'recovery']; // Các trường bạn cho phép cập nhật
+      const updates = Object.keys(body);
+      const isValidOperation = updates.every((key) => allowedUpdates.includes(key));
+  
+      if (!isValidOperation) {
+        throw new BadRequestException('Invalid fields for update');
+      }
+  
+      updates.forEach((key) => {
+        user[key] = body[key];
+      });
+      await user.save();
+  
+      return { message: 'User updated successfully', user };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Failed to update user');
+    }
   }
 
   async getUserByUsername(username: string) {

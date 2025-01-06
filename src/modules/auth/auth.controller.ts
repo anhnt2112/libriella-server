@@ -19,12 +19,11 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body, @Res() res) {
-    const { username, password, fullName } = body;
     try {
-      await this.authService.register(username, password, fullName);
+      const { sessionId, isRecovery } = await this.authService.register(body);
       return res
-        .status(HttpStatus.CREATED)
-        .send({ message: 'User registered successfully' });
+        .status(HttpStatus.OK)
+        .send({ sessionId, isRecovery });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
@@ -34,9 +33,9 @@ export class AuthController {
   async login(@Body() body, @Res() res) {
     const { username, password } = body;
     try {
-      const sessionId = await this.authService.login(username, password);
-      return res.status(HttpStatus.OK).send({ sessionId });
-    } catch (error) {
+      const { sessionId, isRecovery } = await this.authService.login(username, password);
+      return res.status(HttpStatus.OK).send({ sessionId, isRecovery: !!isRecovery })
+    } catch (error) { 
       return res.status(HttpStatus.UNAUTHORIZED).send({ error: error.message });
     }
   }
@@ -49,11 +48,10 @@ export class AuthController {
 
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
-  async googleLoginRedirect(@Req() req) {
-    return {
-      message: 'User information from Google',
-      user: req.user,
-    };
+  async googleLoginRedirect(@Req() req, @Res() res) {
+    const session = await this.authService.validateGoogleUser(req.user.id);
+    const frontendUrl = session ? `http://localhost:9001/session?sessionId=${session.sessionId}` : `http://localhost:9001/information?googleId=${req.user.id}&email=${req.user.email}`;
+    return res.redirect(frontendUrl);
   }
 
   @Get('facebook')
@@ -64,11 +62,10 @@ export class AuthController {
 
   @Get('facebook/redirect')
   @UseGuards(AuthGuard('facebook'))
-  async facebookLoginRedirect(@Req() req) {
-    return {
-      message: 'User information from Facebook',
-      user: req.user,
-    };
+  async facebookLoginRedirect(@Req() req, @Res() res) {
+    const session = await this.authService.validateFacebookUser(req.user.facebookId);
+    const frontendUrl = session ? `http://localhost:9001/session?sessionId=${session.sessionId}` : `http://localhost:9001/information?facebookId=${req.user.facebookId}&email=${req.user.emails}`;
+    return res.redirect(frontendUrl);
   }
 
   @Get('config')

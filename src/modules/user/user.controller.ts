@@ -36,6 +36,20 @@ export class UserController {
     }
   }
 
+  @Post('profile')
+  @UseGuards(AuthGuard)
+  async updateProfile(@Body() body, @Res() res, @Req() req) {
+    try {
+      await this.userService.updateUser(
+        body,
+        req.user.id as unknown as string,
+      );
+      return res.status(HttpStatus.OK).send({ message: "OK" });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
   @Get('explore')
   @UseGuards(AuthGuard)
   async explore(@Body() body, @Res() res, @Req() req) {

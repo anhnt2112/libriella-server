@@ -11,15 +11,36 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  async register(
-    username: string,
-    password: string,
-    fullName: string,
-  ): Promise<void> {
-    await this.userService.createUser(username, password, fullName);
+  async validateFacebookUser(facebookId) {
+    const user = await this.userService.findByFacebookId(facebookId);
+    if (!user) return null;
+    const session = await this.redisService.createSession(user._id as string);
+    return {
+      sessionId: session.sessionId
+    };
   }
 
-  async login(username: string, password: string): Promise<string> {
+  async validateGoogleUser(googleId) {
+    const user = await this.userService.findByGoogleId(googleId);
+    if (!user) return null;
+    const session = await this.redisService.createSession(user._id as string);
+    return {
+      sessionId: session.sessionId
+    };
+  }
+
+  async register(
+    body
+  ) {
+    const user = await this.userService.createUser(body);
+    const session = await this.redisService.createSession(user._id as string);
+    return {
+      isRecovery: user.recovery,
+      sessionId: session.sessionId
+    };
+  }
+
+  async login(username: string, password: string) {
     const user = await this.userService.findByUsername(username);
     if (
       !user ||
@@ -29,7 +50,10 @@ export class AuthService {
     }
 
     const session = await this.redisService.createSession(user._id as string);
-    return session.sessionId;
+    return {
+      isRecovery: user.recovery,
+      sessionId: session.sessionId
+    };
   }
 
   async getConfig(path) {
