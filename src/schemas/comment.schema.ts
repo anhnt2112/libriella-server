@@ -11,7 +11,7 @@ export class Comment extends Document {
     author: User;
 
     @Prop({ type: Types.ObjectId, default: null })
-    comments: Comment;
+    comment: Comment;
 
     @Prop({ type: String })
     content: string;
