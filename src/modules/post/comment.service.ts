@@ -32,12 +32,14 @@ export class CommentService {
       content,
     });
     await this.postService.updatePostReact(postId, content, false);
-    await this.notificationService.createNotification({
-      userId: post.author._id.toString(),
-      postId,
-      commentId: null,
-      creatorId: userId,
-    });
+    if (post.author._id.toString() !== userId) {
+      await this.notificationService.createNotification({
+        userId: post.author._id.toString(),
+        postId,
+        commentId: !content ? null : newElement._id.toString(),
+        creatorId: userId,
+      });
+    }
     return newElement.save();
   }
 
@@ -148,12 +150,14 @@ export class CommentService {
       comment: commentId,
       content,
     });
-    await this.notificationService.createNotification({
-      userId: post.author._id.toString(),
-      postId,
-      commentId,
-      creatorId: userId,
-    });
+    if (post.author._id.toString() !== userId) {
+      await this.notificationService.createNotification({
+        userId: post.author._id.toString(),
+        postId,
+        commentId,
+        creatorId: userId,
+      });
+    }
     return newElement.save();
   }
 }

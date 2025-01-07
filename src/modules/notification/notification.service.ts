@@ -24,6 +24,9 @@ export class NotificationService {
         }).populate({
             path: 'postId',
             select: 'image'
+        }).populate({
+            path: 'commentId',
+            select: 'content comment'
         }).exec();
     }
 }
