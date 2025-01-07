@@ -78,6 +78,15 @@ export class UserService {
     }
   }
 
+  async updateSetting(settingUpdates, userId) {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new UnauthorizedException('Invalid user');
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $set: { setting: settingUpdates } },
+    ).exec();
+  }
+
   async getUserByUsername(username: string) {
     const user = await this.userModel.findOne({ username }).select('-password').exec();
     if (!user) throw new UnauthorizedException('Invalid user');
