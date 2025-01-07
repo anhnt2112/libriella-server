@@ -121,7 +121,6 @@ export class CommentService {
     return this.commentModel
       .find({
         postId,
-        content: { $ne: null },
       })
       .populate({
         path: 'author',
@@ -149,7 +148,6 @@ export class CommentService {
       comment: commentId,
       content,
     });
-    await this.postService.updatePostReact(postId, content, false);
     await this.notificationService.createNotification({
       userId: post.author._id.toString(),
       postId,

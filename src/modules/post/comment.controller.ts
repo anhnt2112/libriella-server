@@ -27,8 +27,9 @@ export class CommentController {
           req.user.id,
           null,
         );
+      } else {
+        await this.commentService.reactPost(body.postId, req.user.id, null);
       }
-      await this.commentService.reactPost(body.postId, req.user.id, null);
       return res.status(HttpStatus.OK).send({ message: 'OK' });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
