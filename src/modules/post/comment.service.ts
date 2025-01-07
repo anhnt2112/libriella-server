@@ -87,11 +87,9 @@ export class CommentService {
     const like = await this.commentModel
       .findOne({
         postId: postId,
+        author: user._id.toString(),
+        comment: null,
         content: null,
-      })
-      .populate({
-        path: 'author',
-        match: { username },
       })
       .exec();
 
@@ -154,7 +152,7 @@ export class CommentService {
       await this.notificationService.createNotification({
         userId: post.author._id.toString(),
         postId,
-        commentId,
+        commentId: newElement._id.toString(),
         creatorId: userId,
       });
     }
