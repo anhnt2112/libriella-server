@@ -64,6 +64,24 @@ export class PostController {
     }
   }
 
+  @Post('update/:id')
+  @UseGuards(AuthGuard)
+  async updatePost(
+    @Body() Body,
+    @Res() res,
+    @Req() req,
+    @Param('id') id: string,
+  ) {
+    try {
+      await this.postService.updatePost(id, Body, req.user.id);
+      return res
+        .status(HttpStatus.CREATED)
+        .send({ message: 'Update post successfully' });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
   @Get('get-posts-by-user-id/:userId')
   @UseGuards(AuthGuard)
   async getPosts(
@@ -99,8 +117,8 @@ export class PostController {
       const posts = await this.postService.getFollowingPosts(
         req.user.id,
         skip,
-        limit
-      )
+        limit,
+      );
       return res.status(HttpStatus.OK).send({ posts });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
@@ -125,34 +143,22 @@ export class PostController {
     }
   }
 
-  @Get('following')
-  @UseGuards(AuthGuard)
-  async getFollowingPost(
-    @Res() res,
-    @Req() req,
-  ) {}
-
-  @Get("preview/:userID")
+  @Get('preview/:userID')
   async getPreviewByUsername(
     @Res() res,
     @Param('userID') userID: string,
-    @Req() req
+    @Req() req,
   ) {
     try {
       const posts = await this.postService.getPreviewPosts(userID);
-      return res
-        .status(HttpStatus.OK)
-        .send(posts);
+      return res.status(HttpStatus.OK).send(posts);
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
   }
 
-  @Get("get-post-by-id/:postId")
-  async getPostByPostId(
-    @Res() res,
-    @Param('postId') postId: string
-  ) {
+  @Get('get-post-by-id/:postId')
+  async getPostByPostId(@Res() res, @Param('postId') postId: string) {
     try {
       const post = await this.postService.getPostByPostId(postId);
       return res.status(HttpStatus.OK).send(post);
@@ -162,10 +168,7 @@ export class PostController {
   }
 
   @Get('search')
-  async search(
-    @Query('bookName') bookName: string,
-    @Res() res,
-  ) {
+  async search(@Query('bookName') bookName: string, @Res() res) {
     try {
       const data = await this.postService.searchByBookName(bookName);
       return res.status(HttpStatus.OK).send(data);
@@ -176,25 +179,17 @@ export class PostController {
 
   @Post('note')
   @UseGuards(AuthGuard)
-  async createNote(
-    @Req() req,
-    @Res() res,
-    @Body() body
-  ) {
+  async createNote(@Req() req, @Res() res, @Body() body) {
     try {
       await this.postService.createNote(req.user.id, body.content);
-      return res.status(HttpStatus.OK).send({ message: "OK" });
+      return res.status(HttpStatus.OK).send({ message: 'OK' });
     } catch (error) {
       return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
     }
   }
 
   @Get('note/:userId')
-  async getNote(
-    @Req() req,
-    @Res() res,
-    @Param('userId') userId: string
-  ) {
+  async getNote(@Req() req, @Res() res, @Param('userId') userId: string) {
     try {
       const note = await this.postService.getNote(userId);
       return res.status(HttpStatus.OK).send(note);
@@ -205,10 +200,7 @@ export class PostController {
 
   @Get('notes')
   @UseGuards(AuthGuard)
-  async getNotes(
-    @Req() req,
-    @Res() res,
-  ) {
+  async getNotes(@Req() req, @Res() res) {
     try {
       const notes = await this.postService.getFollowingNote(req.user.id);
       return res.status(HttpStatus.OK).send(notes);

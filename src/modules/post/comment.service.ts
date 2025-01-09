@@ -9,6 +9,7 @@ import { Comment } from 'src/schemas/comment.schema';
 import { UserService } from '../user/user.service';
 import { PostService } from './post.service';
 import { NotificationService } from '../notification/notification.service';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class CommentService {
@@ -17,6 +18,7 @@ export class CommentService {
     private readonly userService: UserService,
     private readonly postService: PostService,
     private readonly notificationService: NotificationService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async reactPost(postId: string, userId: string, content) {
@@ -31,6 +33,20 @@ export class CommentService {
       postId: postId,
       content,
     });
+
+    if (content) {
+      await this.activityService.createActivity(userId, {
+        type: 3,
+        post: postId,
+        comment: newElement._id.toString(),
+      });
+    } else {
+      await this.activityService.createActivity(userId, {
+        type: 4,
+        post: postId,
+      });
+    }
+
     await this.postService.updatePostReact(postId, content, false);
     if (post.author._id.toString() !== userId) {
       await this.notificationService.createNotification({
@@ -50,6 +66,11 @@ export class CommentService {
     if (!user) throw new UnauthorizedException('Invalid user');
     if (!post) throw new ConflictException('Invalid post');
 
+    await this.activityService.createActivity(userId, {
+      type: 13,
+      post: postId,
+    });
+
     await this.postService.updatePostReact(postId, null, true);
     return this.commentModel
       .deleteOne({
@@ -66,6 +87,12 @@ export class CommentService {
 
     if (!user) throw new UnauthorizedException('Invalid user');
     if (!post) throw new ConflictException('Invalid post');
+
+    await this.activityService.createActivity(userId, {
+      type: 14,
+      post: postId,
+      comment: commentId,
+    });
 
     return this.commentModel
       .deleteOne({
@@ -148,6 +175,21 @@ export class CommentService {
       comment: commentId,
       content,
     });
+
+    if (content) {
+      await this.activityService.createActivity(userId, {
+        type: 5,
+        post: postId,
+        comment: newElement._id.toString(),
+      });
+    } else {
+      await this.activityService.createActivity(userId, {
+        type: 6,
+        post: postId,
+        comment: newElement._id.toString(),
+      });
+    }
+
     if (post.author._id.toString() !== userId) {
       await this.notificationService.createNotification({
         userId: post.author._id.toString(),

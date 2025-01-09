@@ -12,6 +12,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ChatModule } from './modules/conversation/conversation.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { ActivityModule } from './modules/activity/activity.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     AuthModule,
     PostModule,
     ChatModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [AppService],

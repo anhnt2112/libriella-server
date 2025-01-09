@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
-import { User } from './user.schema';
 
 export type PostDocument = Post & Document;
 
@@ -26,6 +25,9 @@ export class Post {
 
   @Prop({ type: Number, default: 0 })
   comments: number;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   author: Types.ObjectId;

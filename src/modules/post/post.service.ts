@@ -1,23 +1,30 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Post, PostDocument } from 'src/schemas/post.schema';
 import { UserService } from '../user/user.service';
 import { Comment } from 'src/schemas/comment.schema';
 import { RedisService } from 'src/database/redis.service';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class PostService {
   constructor(
-    @InjectModel(Post.name) private postModel: Model<PostDocument>,
-    @InjectModel(Comment.name) private commentModel: Model<Comment>,
+    @InjectModel(Post.name) private readonly postModel: Model<PostDocument>,
+    @InjectModel(Comment.name) private readonly commentModel: Model<Comment>,
     private readonly userService: UserService,
     private readonly redisService: RedisService,
+    private readonly activityService: ActivityService,
   ) {}
 
   async createNote(userId, content) {
     const user = await this.userService.getUserById(userId);
-    if (!user) throw new UnauthorizedException('Invalid user'); 
+    if (!user) throw new UnauthorizedException('Invalid user');
+    await this.activityService.createActivity(userId, { type: 7 });
     return this.redisService.createNote(userId, content);
   }
 
@@ -30,17 +37,19 @@ export class PostService {
   async getFollowingNote(userId) {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
-    const notes = await this.redisService.getNotes(user.following.map(id => id.toString()));
-    const notesWithUserInfo = await Promise.all(notes.map(
-      async (note) => {
+    const notes = await this.redisService.getNotes(
+      user.following.map((id) => id.toString()),
+    );
+    const notesWithUserInfo = await Promise.all(
+      notes.map(async (note) => {
         const item = await this.userService.getUserById(note.userId);
         return {
           user: item,
           content: note.content,
-          timestamp: note.timestamp
-        }
-      }
-    ));
+          timestamp: note.timestamp,
+        };
+      }),
+    );
 
     return notesWithUserInfo;
   }
@@ -52,11 +61,18 @@ export class PostService {
       ...post,
       author: post.userId,
     });
+    await this.activityService.createActivity(post.userId, {
+      type: 0,
+      post: newPost._id.toString(),
+    });
     return newPost.save();
   }
 
   async getPostByPostId(postId: string) {
-    return this.postModel.findById(postId).populate('author', 'username avatar').exec();
+    return this.postModel
+      .findById(postId)
+      .populate('author', 'username avatar')
+      .exec();
   }
 
   async getUserPosts(
@@ -68,7 +84,7 @@ export class PostService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
     const posts = await this.postModel
-      .find({ isFavorite, author: userId })
+      .find({ isFavorite, author: userId, isDeleted: false })
       .skip(skip)
       .limit(limit)
       .exec();
@@ -79,11 +95,13 @@ export class PostService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
     const posts = await this.postModel
-      .find({ author: userId })
+      .find({ author: userId, isDeleted: false })
       .skip(0)
       .limit(3)
       .exec();
-    const postCount = await this.postModel.find({ author: userId }).countDocuments();
+    const postCount = await this.postModel
+      .find({ author: userId, isDeleted: false })
+      .countDocuments();
     return {
       count: postCount,
       previewImage: posts.map((post) => ({
@@ -98,13 +116,13 @@ export class PostService {
     if (!user) throw new UnauthorizedException('Invalid user');
     const followingIds = user.following;
     const posts = await this.postModel
-      .find({ author: { $in: followingIds } })
+      .find({ author: { $in: followingIds }, isDeleted: false })
       .populate('author', '-password')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .exec();
-    
+
     return posts;
   }
 
@@ -113,7 +131,7 @@ export class PostService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
     const posts = await this.postModel
-      .find({ author: { $ne: userId } })
+      .find({ author: { $ne: userId }, isDeleted: false })
       .skip(skip)
       .limit(limit)
       .exec();
@@ -134,5 +152,50 @@ export class PostService {
       .find({ bookName: { $regex: searchText, $options: 'i' } })
       .populate('author', 'username')
       .exec();
+  }
+
+  async updatePost(
+    postId: string,
+    updateData: {
+      description?: string;
+      bookName?: string;
+      linkToBuy?: string;
+      isFavorite?: boolean;
+      isDeleted?: boolean;
+    },
+    userId,
+  ) {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new UnauthorizedException('Invalid user');
+
+    const post = await this.postModel.findById(postId).exec();
+    if (!post) {
+      throw new NotFoundException(`Post with ID "${postId}" not found`);
+    }
+
+    if (post.author.toString() !== userId) {
+      throw new UnauthorizedException(
+        'You are not allowed to update this post',
+      );
+    }
+
+    const updatedPost = await this.postModel.findByIdAndUpdate(
+      postId,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    );
+
+    if (updateData.isDeleted) {
+      await this.activityService.createActivity(userId, {
+        type: 2,
+        post: postId,
+      });
+    } else {
+      await this.activityService.createActivity(userId, {
+        type: 1,
+        post: postId,
+      });
+    }
+    return updatedPost;
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { AuthGuard } from '../auth/auth.guard';
 
@@ -9,7 +9,10 @@ export class ConversationController {
   @Post()
   @UseGuards(AuthGuard)
   async createConversation(@Body('receiver') receiver: string, @Req() req) {
-    return this.conversationService.findOrCreateConversation(receiver, req.user.id);
+    return this.conversationService.findOrCreateConversation(
+      receiver,
+      req.user.id,
+    );
   }
 
   @Get()

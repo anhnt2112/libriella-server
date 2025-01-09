@@ -9,13 +9,18 @@ import { CommentService } from './comment.service';
 import { CommentController } from './comment.controller';
 import { NotificationModule } from '../notification/notification.module';
 import { DatabaseModule } from 'src/database/database.module';
+import { ActivityModule } from '../activity/activity.module';
 
 @Module({
   imports: [
     DatabaseModule,
-    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }, { name: Comment.name, schema: CommentSchema }]),
+    MongooseModule.forFeature([
+      { name: Post.name, schema: PostSchema },
+      { name: Comment.name, schema: CommentSchema },
+    ]),
     NotificationModule,
     UserModule,
+    ActivityModule,
   ],
   controllers: [PostController, CommentController],
   providers: [PostService, CommentService],

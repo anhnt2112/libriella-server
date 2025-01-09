@@ -9,12 +9,13 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { NotificationService } from '../notification/notification.service';
+import { ActivityService } from '../activity/activity.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
   ) {}
 
   async findByFacebookId(facebookId) {
