@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ActivityService } from './activity.service';
@@ -12,11 +13,11 @@ import { AuthGuard } from '../auth/auth.guard';
 export class ActivityController {
   constructor(private readonly activityService: ActivityService) {}
 
-  @Get('user/:userId')
+  @Get()
   @UseGuards(AuthGuard)
-  async getActivitiesByUserId(@Param('userId') userId: string) {
+  async getActivitiesByUserId(@Req() req) {
     try {
-      return await this.activityService.getActivitiesByUserId(userId);
+      return await this.activityService.getActivitiesByUserId(req.user.id);
     } catch (error) {
       throw new BadRequestException(error.message);
     }

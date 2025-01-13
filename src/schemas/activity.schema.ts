@@ -1,17 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 
-// Post group
-// Dang bai 0 (done)
-// Cap nhat bai 1 (done)
-// Xoa bai 2 (done)
-// Binh luan bai 3 v
-// Thich bai 4 v
-// Tra loi cmt 5 v
-// Thich cmt 6 v
-// Huy thich bai 13 v
-// Huy thich comment 14 v
-// Dang note 7 (done)
+// Post group (Post, Comment, Like)
+// Dang bai 0 (done) post with pen icon
+// Cap nhat bai 1 (done) post with pen icon
+// Xoa bai 2 (done) post with delete icon
+// Binh luan bai 3 v comment with comment icon
+// Thich bai 4 v like with filled like icon
+// Tra loi cmt 5 v comment with comment icon
+// Thich cmt 6 v like with filled like icon
+// Huy thich bai 13 v unlike with like icon
+// Huy thich comment 14 v unlike with like icon
+// Dang note 7 (done) note with pen icon
 
 // Message group
 // Nhan tin 10

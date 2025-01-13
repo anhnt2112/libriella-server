@@ -22,6 +22,11 @@ export class ActivityService {
   async getActivitiesByUserId(userId: string) {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('User not found');
-    return this.activityModel.find({ userId }).exec();
+    return this.activityModel
+      .find({ author: userId })
+      .populate('user', 'username avatar')
+      .populate('post', 'post image bookName')
+      .populate('comment', 'content comment')
+      .exec();
   }
 }
