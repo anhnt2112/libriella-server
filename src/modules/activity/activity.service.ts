@@ -24,6 +24,7 @@ export class ActivityService {
     if (!user) throw new UnauthorizedException('User not found');
     return this.activityModel
       .find({ author: userId })
+      .populate('author', 'username avatar')
       .populate('user', 'username avatar')
       .populate('post', 'post image bookName')
       .populate('comment', 'content comment')
