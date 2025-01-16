@@ -131,7 +131,7 @@ export class PostService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
     const posts = await this.postModel
-      .find({ author: { $ne: userId }, isDeleted: false })
+      .find({ author: { $nin: [userId, ...user.following] }, isDeleted: false })
       .skip(skip)
       .limit(limit)
       .exec();
