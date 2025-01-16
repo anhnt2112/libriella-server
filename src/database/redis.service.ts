@@ -28,10 +28,10 @@ export class RedisService implements OnModuleInit {
     });
   }
 
-  async createSession(userId: string) {
+  async createSession(userId: string, time = 30 * 24 *  60 * 60) {
     const sessionId = `session_${randomUUID()}`;
     const currentSession = await this.getSession(sessionId);
-    if (!currentSession) await this.client.set(sessionId, userId, 'EX', 30 * 24 *  60 * 60);
+    if (!currentSession) await this.client.set(sessionId, userId, 'EX', time);
     return { sessionId };
   }
 

@@ -6,10 +6,12 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { GoogleStrategy } from './google.strategy';
 import { FacebookStrategy } from './facebook.strategy';
+import { MailModule } from 'src/mail/mail.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    MailModule,
     UserModule,
     PassportModule.register({
       defaultStrategy: 'google'

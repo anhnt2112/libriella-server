@@ -68,8 +68,9 @@ export class UserService {
         throw new BadRequestException('Invalid fields for update');
       }
   
-      updates.forEach((key) => {
-        user[key] = body[key];
+      updates.forEach(async (key) => {
+        if (key === "password") user[key] = await bcrypt.hash(body.password, 10);
+        else user[key] = body[key];
       });
       await user.save();
   

@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { RedisService } from 'src/database/redis.service';
 import { UserService } from '../user/user.service';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -9,6 +10,7 @@ export class AuthService {
   constructor(
     private readonly redisService: RedisService,
     private readonly userService: UserService,
+    private readonly mailService: MailService,
   ) {}
 
   async validateFacebookUser(facebookId) {
@@ -54,6 +56,30 @@ export class AuthService {
       isRecovery: user.recovery,
       sessionId: session.sessionId
     };
+  }
+
+  async resetPasswordByCode(username: string, code: string) {
+    const user = await this.userService.findByUsername(username);
+    if (!user || code !== user.recovery) {
+      throw new UnauthorizedException('Invalid username or wrong code');
+    }
+
+    const session = await this.redisService.createSession(user._id as string);
+    return {
+      sessionId: session.sessionId
+    };
+  }
+
+  async sendMailReset(username: string) {
+    const user = await this.userService.findByUsername(username);
+    console.log(user);
+    if (!user || !user.email) {
+      throw new UnauthorizedException('Invalid username or email');
+    }
+
+    const session = await this.redisService.createSession(user._id as string);
+    const link = `http://localhost:9001/new-password?sessionId=${session.sessionId}`;
+    return this.mailService.sendUserRegistrationMail(user.email, link);
   }
 
   async getConfig(path) {

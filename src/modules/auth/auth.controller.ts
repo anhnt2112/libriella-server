@@ -29,6 +29,26 @@ export class AuthController {
     }
   }
 
+  @Post('forgot-password')
+  async forgotPassword(@Body() body, @Res() res) {
+    try {
+      const {sessionId} = await this.authService.resetPasswordByCode(body.username, body.code);
+      return res.status(HttpStatus.OK).send({ sessionId });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body, @Res() res) {
+    try {
+      await this.authService.sendMailReset(body.username);
+      return res.status(HttpStatus.OK).send({ message: "OK" });
+    } catch (error) {
+      return res.status(HttpStatus.BAD_REQUEST).send({ error: error.message });
+    }
+  }
+
   @Post('login')
   async login(@Body() body, @Res() res) {
     const { username, password } = body;
