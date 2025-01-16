@@ -73,7 +73,7 @@ export class User {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   followers: Types.ObjectId[];
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [], ref: 'User' })
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   following: Types.ObjectId[];
 }
 

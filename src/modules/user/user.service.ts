@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -139,16 +140,26 @@ export class UserService {
   }
 
   async unfollowUser(followerId: string, followingId: string) {
-    await this.userModel.findByIdAndUpdate(followingId, {
-      $pull: { followers: followerId }, 
-    });
+    const followingUser = await this.userModel.findById(followingId);
+    const followerUser = await this.userModel.findById(followerId);
   
-    await this.userModel.findByIdAndUpdate(followerId, {
-      $pull: { following: followingId }, 
-    });
+    if (!followingUser || !followerUser) {
+      throw new NotFoundException('User not found');
+    }
   
-    return { success: true };
+    followerUser.followers = followingUser.followers.filter(
+      (id) => id.toString() !== followingId
+    );
+    await followingUser.save();
+  
+    followingUser.following = followerUser.following.filter(
+      (id) => id.toString() !== followerId
+    );
+    await followerUser.save();
+  
+    return { success: true, message: 'Unfollowed successfully' };
   }
+  
 
   async updateAvatar(userId: string, avatar: string) {
     const user = await this.userModel.findById(userId).exec();
