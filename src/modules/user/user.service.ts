@@ -147,12 +147,12 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
   
-    followerUser.followers = followingUser.followers.filter(
+    followerUser.followers = followerUser.followers.filter(
       (id) => id.toString() !== followingId
     );
     await followingUser.save();
   
-    followingUser.following = followerUser.following.filter(
+    followingUser.following = followingUser.following.filter(
       (id) => id.toString() !== followerId
     );
     await followerUser.save();
