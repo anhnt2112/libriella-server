@@ -10,6 +10,9 @@ import { CommentController } from './comment.controller';
 import { NotificationModule } from '../notification/notification.module';
 import { DatabaseModule } from 'src/database/database.module';
 import { ActivityModule } from '../activity/activity.module';
+import { RatingService } from './rating.service';
+import { RatingController } from './rating.controller';
+import { Rating, RatingSchema } from 'src/schemas/rating.schema';
 
 @Module({
   imports: [
@@ -17,13 +20,14 @@ import { ActivityModule } from '../activity/activity.module';
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
       { name: Comment.name, schema: CommentSchema },
+      { name: Rating.name, schema: RatingSchema }
     ]),
     NotificationModule,
     UserModule,
     ActivityModule,
   ],
-  controllers: [PostController, CommentController],
-  providers: [PostService, CommentService],
-  exports: [PostService, CommentService],
+  controllers: [PostController, CommentController, RatingController],
+  providers: [PostService, CommentService, RatingService],
+  exports: [PostService, CommentService, RatingService],
 })
 export class PostModule {}

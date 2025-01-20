@@ -26,11 +26,20 @@ export class Post {
   @Prop({ type: Number, default: 0 })
   comments: number;
 
+  @Prop({ type: [String], default: [] })
+  tags: string[];
+
   @Prop({ default: false })
   isDeleted: boolean;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   author: Types.ObjectId;
+
+  @Prop({ type: Number, default: 0 })
+  rate: number;
+
+  @Prop({ type: Number })
+  average: number;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

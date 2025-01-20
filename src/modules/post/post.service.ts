@@ -60,6 +60,7 @@ export class PostService {
     const newPost = new this.postModel({
       ...post,
       author: post.userId,
+      tags: post.tags.split(",")
     });
     await this.activityService.createActivity(post.userId, {
       type: 0,
