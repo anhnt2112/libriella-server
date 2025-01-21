@@ -67,13 +67,14 @@ export class PostController {
   @Post('update/:id')
   @UseGuards(AuthGuard)
   async updatePost(
-    @Body() Body,
+    @Body() body,
     @Res() res,
     @Req() req,
     @Param('id') id: string,
   ) {
     try {
-      await this.postService.updatePost(id, Body, req.user.id);
+      await this.postService.updatePost(id, body, req.user.id);
+      console.log(body);
       return res
         .status(HttpStatus.CREATED)
         .send({ message: 'Update post successfully' });

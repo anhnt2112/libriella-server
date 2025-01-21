@@ -60,7 +60,7 @@ export class PostService {
     const newPost = new this.postModel({
       ...post,
       author: post.userId,
-      tags: post.tags.split(",")
+      tags: post.tags.split(','),
     });
     await this.activityService.createActivity(post.userId, {
       type: 0,
@@ -150,22 +150,15 @@ export class PostService {
 
   async searchByBookName(searchText: string) {
     return this.postModel
-      .find({ bookName: { $regex: searchText, $options: 'i' } })
+      .find({
+        bookName: { $regex: searchText, $options: 'i' },
+        isDeleted: false,
+      })
       .populate('author', 'username')
       .exec();
   }
 
-  async updatePost(
-    postId: string,
-    updateData: {
-      description?: string;
-      bookName?: string;
-      linkToBuy?: string;
-      isFavorite?: boolean;
-      isDeleted?: boolean;
-    },
-    userId,
-  ) {
+  async updatePost(postId: string, updateData, userId) {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
 
@@ -180,11 +173,20 @@ export class PostService {
       );
     }
 
-    const updatedPost = await this.postModel.findByIdAndUpdate(
-      postId,
-      { $set: updateData },
-      { new: true, runValidators: true },
-    );
+    console.log(updateData);
+
+    const updatedPost = await this.postModel.findByIdAndUpdate(postId, {
+      $set: {
+        description: updateData.description || post.description,
+        bookName: updateData.bookName || post.bookName,
+        linkToBuy: updateData.linkToBuy || post.linkToBuy,
+        isFavorite: updateData.isFavorite,
+        tags: updateData.tags || post.tags,
+        isDeleted: !!updateData.isDeleted,
+      },
+    });
+
+    console.log(updateData.isDeleted);
 
     if (updateData.isDeleted) {
       await this.activityService.createActivity(userId, {
